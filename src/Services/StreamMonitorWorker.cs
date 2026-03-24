@@ -12,6 +12,7 @@ public sealed class StreamMonitorWorker : BackgroundService
     private readonly EmailNotificationService _emailService;
     private readonly ILogger<StreamMonitorWorker> _logger;
     private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(10);
+    private static readonly JsonSerializerOptions PrettyJsonOptions = new() { WriteIndented = true };
 
     public StreamMonitorWorker(string streamName, EventStoreClient eventStoreClient,
         CheckpointService checkpointService, EmailNotificationService emailService,
@@ -64,7 +65,7 @@ public sealed class StreamMonitorWorker : BackgroundService
                 if (evt.Data.Length > 0)
                 {
                     var raw = JsonDocument.Parse(evt.Data);
-                    prettyJson = JsonSerializer.Serialize(raw, new JsonSerializerOptions { WriteIndented = true });
+                    prettyJson = JsonSerializer.Serialize(raw, PrettyJsonOptions);
                 }
             }
             catch { prettyJson = Encoding.UTF8.GetString(evt.Data.Span); }

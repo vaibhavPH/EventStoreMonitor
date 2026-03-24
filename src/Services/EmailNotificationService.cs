@@ -90,12 +90,19 @@ public sealed class EmailNotificationService
             message.Subject = subject;
             message.Body = new TextPart("html") { Text = htmlBody };
             using var smtp = new SmtpClient();
-            await smtp.ConnectAsync(_options.SmtpHost, _options.SmtpPort,
-                _options.UseTls ? SecureSocketOptions.StartTls : SecureSocketOptions.None, ct);
-            await smtp.AuthenticateAsync(_options.SenderAddress, _options.AppPassword, ct);
-            await smtp.SendAsync(message, ct);
-            await smtp.DisconnectAsync(true, ct);
-            _logger.LogInformation("Email sent: {Subject}", subject);
+            try
+            {
+                await smtp.ConnectAsync(_options.SmtpHost, _options.SmtpPort,
+                    _options.UseTls ? SecureSocketOptions.StartTls : SecureSocketOptions.None, ct);
+                await smtp.AuthenticateAsync(_options.SenderAddress, _options.AppPassword, ct);
+                await smtp.SendAsync(message, ct);
+                _logger.LogInformation("Email sent: {Subject}", subject);
+            }
+            finally
+            {
+                if (smtp.IsConnected)
+                    await smtp.DisconnectAsync(true, ct);
+            }
         }
         catch (Exception ex)
         {

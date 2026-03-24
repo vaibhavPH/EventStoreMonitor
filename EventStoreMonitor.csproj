@@ -9,8 +9,7 @@
   <ItemGroup>
     <PackageReference Include="EventStore.Client.Grpc.Streams" Version="23.*" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.*" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="10.*" />
-    <PackageReference Include="MailKit" Version="4.*" />
+<PackageReference Include="MailKit" Version="4.*" />
     <PackageReference Include="MimeKit" Version="4.*" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.*" />
   </ItemGroup>
