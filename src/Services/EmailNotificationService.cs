@@ -94,7 +94,8 @@ public class EmailNotificationService
             {
                 await smtp.ConnectAsync(_options.SmtpHost, _options.SmtpPort,
                     _options.UseTls ? SecureSocketOptions.StartTls : SecureSocketOptions.None, ct);
-                await smtp.AuthenticateAsync(_options.SenderAddress, _options.AppPassword, ct);
+                if (!string.IsNullOrEmpty(_options.AppPassword))
+                    await smtp.AuthenticateAsync(_options.SenderAddress, _options.AppPassword, ct);
                 await smtp.SendAsync(message, ct);
                 _logger.LogInformation("Email sent: {Subject}", subject);
             }

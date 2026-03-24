@@ -139,7 +139,7 @@ public sealed class FakeEmailNotificationService : EmailNotificationService
                 SmtpPort = 25,
                 SenderAddress = "test@test.com",
                 RecipientAddress = "test@test.com",
-                AppPassword = "fake"
+                AppPassword = null
             }),
             NullLogger<EmailNotificationService>.Instance)
     {

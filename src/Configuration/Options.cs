@@ -20,5 +20,5 @@ public sealed class EmailOptions
     [Required, EmailAddress] public required string SenderAddress { get; init; }
     public string SenderDisplayName { get; init; } = "EventStore Monitor";
     [Required, EmailAddress] public required string RecipientAddress { get; init; }
-    [Required] public required string AppPassword { get; init; }
+    public string? AppPassword { get; init; }
 }
