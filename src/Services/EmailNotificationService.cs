@@ -6,7 +6,7 @@ using MimeKit;
 
 namespace EventStoreMonitor.Services;
 
-public sealed class EmailNotificationService
+public class EmailNotificationService
 {
     private readonly EmailOptions _options;
     private readonly ILogger<EmailNotificationService> _logger;
@@ -17,7 +17,7 @@ public sealed class EmailNotificationService
         _logger = logger;
     }
 
-    public async Task SendEventNotificationAsync(string streamName, string eventType, string eventId,
+    public virtual async Task SendEventNotificationAsync(string streamName, string eventType, string eventId,
         ulong eventNumber, DateTime created, string? dataJson, CancellationToken ct = default)
     {
         var subject = $"[EventStore] New event: {eventType}";
@@ -43,7 +43,7 @@ public sealed class EmailNotificationService
         await SendAsync(subject, body, ct);
     }
 
-    public async Task SendCrashNotificationAsync(Exception ex, CancellationToken ct = default)
+    public virtual async Task SendCrashNotificationAsync(Exception ex, CancellationToken ct = default)
     {
         var subject = "[EventStore Monitor] ⚠️ Service crashed";
         var body = $"""
@@ -65,7 +65,7 @@ public sealed class EmailNotificationService
         await SendAsync(subject, body, ct);
     }
 
-    public async Task SendStartupNotificationAsync(IEnumerable<string> streams, CancellationToken ct = default)
+    public virtual async Task SendStartupNotificationAsync(IEnumerable<string> streams, CancellationToken ct = default)
     {
         var streamList = string.Join(", ", streams.Select(s => $"<code>{HtmlEncode(s)}</code>"));
         var subject = "[EventStore Monitor] ✅ Service started";
