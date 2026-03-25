@@ -31,7 +31,7 @@ public sealed class CheckpointService
                 return null;
             }
             var @event = await result.FirstOrDefaultAsync(ct);
-            if (@event.Equals(default(ResolvedEvent))) return null;
+            if (@event.Event is null) return null;
             var checkpoint = JsonSerializer.Deserialize<CheckpointData>(@event.Event.Data.Span, _jsonOptions);
             _logger.LogInformation("Loaded checkpoint for {Stream}: {Position}", monitoredStream, checkpoint?.Position);
             return checkpoint?.Position;

@@ -31,7 +31,7 @@ public sealed class CrashNotificationService : IHostedService
         if (e.ExceptionObject is Exception ex)
         {
             _logger.LogCritical(ex, "Unhandled exception — sending crash email");
-            _emailService.SendCrashNotificationAsync(ex, CancellationToken.None).GetAwaiter().GetResult();
+            _ = SendCrashEmailWithTimeout(ex);
         }
     }
 
@@ -39,6 +39,19 @@ public sealed class CrashNotificationService : IHostedService
     {
         e.SetObserved();
         _logger.LogError(e.Exception, "Unobserved task exception");
-        _ = _emailService.SendCrashNotificationAsync(e.Exception, CancellationToken.None);
+        _ = SendCrashEmailWithTimeout(e.Exception);
+    }
+
+    private async Task SendCrashEmailWithTimeout(Exception ex)
+    {
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        try
+        {
+            await _emailService.SendCrashNotificationAsync(ex, cts.Token);
+        }
+        catch (Exception sendEx)
+        {
+            _logger.LogError(sendEx, "Failed to send crash notification email");
+        }
     }
 }

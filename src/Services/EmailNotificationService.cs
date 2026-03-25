@@ -6,7 +6,7 @@ using MimeKit;
 
 namespace EventStoreMonitor.Services;
 
-public sealed class EmailNotificationService
+public class EmailNotificationService
 {
     private readonly EmailOptions _options;
     private readonly ILogger<EmailNotificationService> _logger;
@@ -17,7 +17,7 @@ public sealed class EmailNotificationService
         _logger = logger;
     }
 
-    public async Task SendEventNotificationAsync(string streamName, string eventType, string eventId,
+    public virtual async Task SendEventNotificationAsync(string streamName, string eventType, string eventId,
         ulong eventNumber, DateTime created, string? dataJson, CancellationToken ct = default)
     {
         var subject = $"[EventStore] New event: {eventType}";
@@ -43,7 +43,7 @@ public sealed class EmailNotificationService
         await SendAsync(subject, body, ct);
     }
 
-    public async Task SendCrashNotificationAsync(Exception ex, CancellationToken ct = default)
+    public virtual async Task SendCrashNotificationAsync(Exception ex, CancellationToken ct = default)
     {
         var subject = "[EventStore Monitor] ⚠️ Service crashed";
         var body = $"""
@@ -65,7 +65,7 @@ public sealed class EmailNotificationService
         await SendAsync(subject, body, ct);
     }
 
-    public async Task SendStartupNotificationAsync(IEnumerable<string> streams, CancellationToken ct = default)
+    public virtual async Task SendStartupNotificationAsync(IEnumerable<string> streams, CancellationToken ct = default)
     {
         var streamList = string.Join(", ", streams.Select(s => $"<code>{HtmlEncode(s)}</code>"));
         var subject = "[EventStore Monitor] ✅ Service started";
@@ -90,12 +90,20 @@ public sealed class EmailNotificationService
             message.Subject = subject;
             message.Body = new TextPart("html") { Text = htmlBody };
             using var smtp = new SmtpClient();
-            await smtp.ConnectAsync(_options.SmtpHost, _options.SmtpPort,
-                _options.UseTls ? SecureSocketOptions.StartTls : SecureSocketOptions.None, ct);
-            await smtp.AuthenticateAsync(_options.SenderAddress, _options.AppPassword, ct);
-            await smtp.SendAsync(message, ct);
-            await smtp.DisconnectAsync(true, ct);
-            _logger.LogInformation("Email sent: {Subject}", subject);
+            try
+            {
+                await smtp.ConnectAsync(_options.SmtpHost, _options.SmtpPort,
+                    _options.UseTls ? SecureSocketOptions.StartTls : SecureSocketOptions.None, ct);
+                if (!string.IsNullOrEmpty(_options.AppPassword))
+                    await smtp.AuthenticateAsync(_options.SenderAddress, _options.AppPassword, ct);
+                await smtp.SendAsync(message, ct);
+                _logger.LogInformation("Email sent: {Subject}", subject);
+            }
+            finally
+            {
+                if (smtp.IsConnected)
+                    await smtp.DisconnectAsync(true, ct);
+            }
         }
         catch (Exception ex)
         {
